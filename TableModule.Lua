@@ -12,6 +12,8 @@ local function GetMaxIndex(Tbl)
     return MaxIndex
 end
 
+local PathModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/James-Lol/Remoty-Spy/refs/heads/main/PathModule.Lua"))()
+
 -- Format basic types
 local function FormatBasicType(Value)
     if type(Value) == "string" then
@@ -230,7 +232,7 @@ end
 local function FormatReference(Value)
     local ValueType = typeof(Value)
     if ValueType == "Instance" then
-        return Value:GetFullName()
+        return PathModule.ObjectToPath(Value)
     elseif ValueType == "EnumItem" then
         return string.format("Enum.%s.%s", 
             tostring(Value.EnumType),
