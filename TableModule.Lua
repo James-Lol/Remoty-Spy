@@ -29,10 +29,12 @@ end
 -- Format Vector types
 local function FormatVector(Vector)
     local VectorType = typeof(Vector)
-    if VectorType == "Vector2" or VectorType == "Vector3" then
-        return string.format("%s.new(%s)", 
-            VectorType,
-            table.concat({Vector:components()}, ", "))
+    if VectorType == "Vector2" then
+        return string.format("Vector2.new(%g, %g)", 
+            Vector.X, Vector.Y)
+    elseif VectorType == "Vector3" then
+        return string.format("Vector3.new(%g, %g, %g)",
+            Vector.X, Vector.Y, Vector.Z)
     end
     return nil
 end
