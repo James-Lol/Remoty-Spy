@@ -128,6 +128,9 @@ function CodeDisplay.New(Frame, Settings)
 	self.CodeLabel = CodeLabel
 	self.CopyableCodeLabel = CopyableCodeLabel
 	self.LineNumbers = LineNumbers
+	CodeLabel.Text = ""
+	CopyableCodeLabel.Text = ""
+	LineNumbers.Text = ""
 
 	return self
 end
