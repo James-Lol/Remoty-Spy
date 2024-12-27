@@ -173,7 +173,7 @@ end
 
 function CodeDisplay:CreateLine(Number, CodeText)
 	local LineNumber = Instance.new("TextLabel")
-	LineNumber.Size = UDim2.new(0, 35, 0.1, 0)
+	LineNumber.Size = UDim2.new(0, 32, 0.1, 0)
 	LineNumber.BackgroundTransparency = 1
 	LineNumber.TextColor3 = Color3.new(0.8, 0.8, 0.8)
 	LineNumber.TextScaled = true
@@ -262,7 +262,7 @@ function CodeDisplay:SetCode(Code)
 		end
 	end
 	
-	YScrollingFrameSize = self.ScrollingFrame:FindFirstChild("UIListLayout").AbsoluteContentSize.Y * 1.1
+	YScrollingFrameSize = self.ScrollingFrame:FindFirstChild("UIListLayout").AbsoluteContentSize.Y * 2
 	self.ScrollingFrame.CanvasSize = UDim2.new(XScrollingFrameSize, 0, 0, YScrollingFrameSize)
 end
 
