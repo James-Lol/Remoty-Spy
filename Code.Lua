@@ -15,7 +15,7 @@ ScreenGui.Name = "ScreenGui"
 ScreenGui.IgnoreGuiInset = true
 ScreenGui.ResetOnSpawn = false
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-ScreenGui.Parent = game:GetService("CoreGui").Composer
+ScreenGui.Parent = game:GetService("CoreGui")
 
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
@@ -228,9 +228,20 @@ local function CreateMainButtons()
 			CopyToClipboard(CurrentCode)
 		end
 	end)
-end
 
-CreateMainButtons()
+	CreateButton(1, "MainButton4", "Run Code", 3).MouseButton1Click:Connect(function()
+		if CurrentCode ~= "" then
+			local Success, ErrorMsg = pcall(function()
+				loadstring(CurrentCode)()
+			end)
+
+			if not Success then
+
+				warn("Error during decompilation: " .. tostring(ErrorMsg))
+			end
+		end
+	end)
+end
 
 local function CreateScrollButton(ButtonName, ButtonText, ScrollingFrame, Order)
 	ButtonName = ButtonName or "Button"
@@ -314,7 +325,7 @@ end
 local OriginalFireServer = nil
 local OriginalInvokeServer = nil
 
-OriginalFireServer = hookfunction(Instance.new("RemoteEvent").FireServer, function(RemoteObject, ...)
+OriginalFireServer = hookfunction(Instance.new("RemoteEvent").FireServer, newcclosure(function(RemoteObject, ...)
 	local Args = { ... }
 	local Source = getcallingscript()
 
@@ -323,22 +334,22 @@ OriginalFireServer = hookfunction(Instance.new("RemoteEvent").FireServer, functi
 	end)()
 
 	return OriginalFireServer(RemoteObject, unpack(Args))
-end)
+end))
 
-OriginalInvokeServer = hookfunction(Instance.new("RemoteFunction").InvokeServer, function(RemoteObject, ...)
+OriginalInvokeServer = hookfunction(Instance.new("RemoteFunction").InvokeServer, newcclosure(function(RemoteObject, ...)
 
 	local Args = { ... }
 	local Source = getcallingscript()
 
 	coroutine.wrap(function()
-		RegisterRemote(RemoteObject,{ Source, Args, "InvokeServer"})
+		RegisterRemote(RemoteObject, {Source, Args, "InvokeServer"})
 	end)()
 
 	return OriginalInvokeServer(RemoteObject, unpack(Args))
-end)
+end))
 
 local OriginalNamecall
-OriginalNamecall = hookmetamethod(game, "__namecall", function(Self, ...)
+OriginalNamecall = hookmetamethod(game, "__namecall", newcclosure(function(Self, ...)
 
 	local MethodName = getnamecallmethod()
 	local Args = { ... }
@@ -351,4 +362,6 @@ OriginalNamecall = hookmetamethod(game, "__namecall", function(Self, ...)
 	end)()
 
 	return OriginalNamecall(Self, ...)
-end)
+end))
+
+CreateMainButtons()
