@@ -60,9 +60,13 @@ local function ToHex(Color)
 	return "#" .. string.reverse(Final)
 end
 
-function CodeDisplay.New(Frame)
+function CodeDisplay.New(Frame, Settings)
 	local self = setmetatable({}, CodeDisplay)
-	
+
+	Settings = Settings or {}
+	self.TextSize = Settings.TextSize or 14
+	self.LineNumberWidth = Settings.LineNumberWidth or 30
+
 	local CodeDisplayScrollingFrame = Instance.new("ScrollingFrame")
 	CodeDisplayScrollingFrame.Name = "CodeDisplay"
 	CodeDisplayScrollingFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
@@ -78,35 +82,80 @@ function CodeDisplay.New(Frame)
 	CodeDisplayScrollingFrame.TopImage = "rbxassetid://19000029648"
 	CodeDisplayScrollingFrame.BorderSizePixel = 0
 	CodeDisplayScrollingFrame.Parent = Frame
-	
+
+	local CodeLabel = Instance.new("TextLabel")
+	CodeLabel.Size = UDim2.new(1, -(self.LineNumberWidth + 10), 1, 0)
+	CodeLabel.Position = UDim2.new(0, self.LineNumberWidth + 5, 0, 0)
+	CodeLabel.BackgroundTransparency = 1
+	CodeLabel.TextColor3 = DefaultCodeColors.TextColor
+	CodeLabel.TextSize = self.TextSize
+	CodeLabel.RichText = true
+	CodeLabel.TextXAlignment = Enum.TextXAlignment.Left
+	CodeLabel.TextYAlignment = Enum.TextYAlignment.Top
+	CodeLabel.FontFace = Font.new("rbxasset://fonts/families/Inconsolata.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+	CodeLabel.Name = "CodeLabel"
+	CodeLabel.Parent = CodeDisplayScrollingFrame
+
+	local CopyableCodeLabel = Instance.new("TextBox")
+	CopyableCodeLabel.Size = UDim2.new(1, -(self.LineNumberWidth + 10), 1, 0)
+	CopyableCodeLabel.Position = UDim2.new(0, self.LineNumberWidth + 5, 0, 0)
+	CopyableCodeLabel.BackgroundTransparency = 1
+	CopyableCodeLabel.TextTransparency = 0.9
+	CopyableCodeLabel.TextSize = self.TextSize
+	CopyableCodeLabel.TextXAlignment = Enum.TextXAlignment.Left
+	CopyableCodeLabel.TextYAlignment = Enum.TextYAlignment.Top
+	CopyableCodeLabel.FontFace = Font.new("rbxasset://fonts/families/Inconsolata.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+	CopyableCodeLabel.Name = "CopyableCodeLabel"
+	CopyableCodeLabel.ClearTextOnFocus = false
+	CopyableCodeLabel.TextEditable = false
+	CopyableCodeLabel.ZIndex = 2
+	CopyableCodeLabel.Parent = CodeDisplayScrollingFrame
+
+	local LineNumbers = Instance.new("TextLabel")
+	LineNumbers.Size = UDim2.new(0, self.LineNumberWidth, 1, 0)
+	LineNumbers.Position = UDim2.new(0, 0, 0, 0)
+	LineNumbers.BackgroundTransparency = 1
+	LineNumbers.TextColor3 = Color3.new(0.8, 0.8, 0.8)
+	LineNumbers.TextSize = self.TextSize
+	LineNumbers.TextXAlignment = Enum.TextXAlignment.Left
+	LineNumbers.TextYAlignment = Enum.TextYAlignment.Top
+	LineNumbers.FontFace = Font.new("rbxasset://fonts/families/Inconsolata.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+	LineNumbers.Name = "LineNumbers"
+	LineNumbers.Parent = CodeDisplayScrollingFrame
+
 	self.ScrollingFrame = CodeDisplayScrollingFrame
-	
-	local ListLayout = Instance.new("UIListLayout")
-	ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-	ListLayout.Parent = CodeDisplayScrollingFrame
-	
-	self:CreateLine(1)
-	self.LineCount = 1
+	self.CodeLabel = CodeLabel
+	self.CopyableCodeLabel = CopyableCodeLabel
+	self.LineNumbers = LineNumbers
+
 	return self
 end
 
 local function WrapWithColor(Text, Color)
-	return string.format([[<font color="%s">%s</font>]],ToHex(Color),Text)
+	return string.format([[<font color="%s">%s</font>]], ToHex(Color), Text)
 end
 
 function CodeDisplay:ProcessText(Text)
 	if Text == "" then return "" end
-
-	local CommentStart = Text:find("%-%-")
-	if CommentStart then
-		local BeforeComment = Text:sub(1, CommentStart - 1)
-		local Comment = Text:sub(CommentStart)
-		return self:ProcessText(BeforeComment) .. WrapWithColor(Comment, DefaultCodeColors.CommentColor)
+	local ProcessedLines = {}
+	for Line in (Text .. "\n"):gmatch("([^\n]*)\n") do
+		local ProcessedLine = Line
+		local CommentStart = Line:find("%-%-")
+		if CommentStart then
+			local BeforeComment = Line:sub(1, CommentStart - 1)
+			local Comment = Line:sub(CommentStart)
+			ProcessedLine = self:ProcessWords(BeforeComment) .. WrapWithColor(Comment, DefaultCodeColors.CommentColor)
+		else
+			ProcessedLine = self:ProcessWords(Line)
+		end
+		table.insert(ProcessedLines, ProcessedLine)
 	end
+	return table.concat(ProcessedLines, "\n")
+end
 
+function CodeDisplay:ProcessWords(Text)
 	local ProcessedWords = {}
 	local CurrentWord = ""
-	local Result = ""
 	local InString = false
 	local StringChar = nil
 	local i = 1
@@ -172,99 +221,50 @@ function CodeDisplay:ProcessText(Text)
 	return table.concat(ProcessedWords)
 end
 
-function CodeDisplay:CreateLine(Number, CodeText)
-	local LineNumber = Instance.new("TextLabel")
-	LineNumber.Size = UDim2.new(0, 28, 0.1, 0)
-	LineNumber.BackgroundTransparency = 1
-	LineNumber.TextColor3 = Color3.new(0.8, 0.8, 0.8)
-	LineNumber.TextScaled = true
-	LineNumber.RichText = true
-	LineNumber.FontFace = Font.new("rbxasset://fonts/families/Inconsolata.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
-	LineNumber.TextXAlignment = Enum.TextXAlignment.Left
-	LineNumber.Text = " " .. tostring(Number)
-	LineNumber.Name = "Line" .. Number
-	LineNumber.LayoutOrder = Number
-	LineNumber.Parent = self.ScrollingFrame
-	
-	local UIAspectRatioConstraint = Instance.new("UIAspectRatioConstraint")
-	UIAspectRatioConstraint.Name = "UIAspectRatioConstraint"
-	UIAspectRatioConstraint.AspectRatio = 1.455339789390564
-	UIAspectRatioConstraint.Parent = LineNumber
+function CodeDisplay:SetCode(Code)
+	local RobloxTextLimit = 20000
 
-	local CodeLabel = Instance.new("TextLabel")
-	CodeLabel.Size = UDim2.new(1000, 0, 1, 0)
-	CodeLabel.Position = UDim2.new(1, 0, 0, 0)
-	CodeLabel.BackgroundTransparency = 1
-	CodeLabel.TextColor3 = DefaultCodeColors.TextColor
-	CodeLabel.TextScaled = true
-	CodeLabel.RichText = true
-	CodeLabel.TextXAlignment = Enum.TextXAlignment.Left
-	CodeLabel.FontFace = Font.new("rbxasset://fonts/families/Inconsolata.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
-	CodeLabel.Name = "Code"
-	CodeLabel.Text = self:ProcessText(CodeText or "")
-	CodeLabel.Parent = LineNumber
+	if #Code >= RobloxTextLimit then
+		self.LineNumbers.Text = "1"
+		self.CodeLabel.Text = string.format("-- Unable to assign property Text. Provided code length (%d) is greater than or equal to max length (%d)", #Code, RobloxTextLimit)
+		self.CopyableCodeLabel.Text = ""
+		self.ScrollingFrame.CanvasSize = UDim2.new(0, self.CodeLabel.TextBounds.X + self.LineNumberWidth + 10, 0, self.CodeLabel.TextBounds.Y)
+		return
+	end
+
+	local LineCount = select(2, Code:gsub("\n", "\n"))
+	local LineNumbersText = {}
+	for i = 1, LineCount do
+		table.insert(LineNumbersText, i)
+	end
 	
-	local CopyableCodeLabel = Instance.new("TextBox")
-	CopyableCodeLabel.ClearTextOnFocus = false
-	CopyableCodeLabel.TextEditable = false
-	CopyableCodeLabel.Size = UDim2.new(1000, 0, 1, 0)
-	CopyableCodeLabel.Position = UDim2.new(1, 0, 0, 0)
-	CopyableCodeLabel.TextTransparency = 0.9
-	CopyableCodeLabel.BackgroundTransparency = 1
-	CopyableCodeLabel.TextScaled = true
-	CopyableCodeLabel.RichText = true
-	CopyableCodeLabel.TextXAlignment = Enum.TextXAlignment.Left
-	CopyableCodeLabel.FontFace = Font.new("rbxasset://fonts/families/Inconsolata.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
-	CopyableCodeLabel.Name = "CopyableCode"
-	CopyableCodeLabel.Text = CodeText or ""
-	CopyableCodeLabel.ZIndex = 2
-	CopyableCodeLabel.Parent = LineNumber
-	
-	return LineNumber
+	self.LineNumbers.Text = table.concat(LineNumbersText, "\n")
+	self.CodeLabel.Text = self:ProcessText(Code)
+	self.CopyableCodeLabel.Text = Code
+
+	self.ScrollingFrame.CanvasSize = UDim2.new(0, (self.CodeLabel.TextBounds.X + self.LineNumberWidth + 10) * 1.5, 0, self.CodeLabel.TextBounds.Y)
 end
 
-function CodeDisplay:SetCode(Code)
-	local Lines = {}
-	local XScrollingFrameSize = 0
-	local YScrollingFrameSize = 0
-	
-	for Line in (Code .. "\n"):gmatch("([^\n]*)\n") do
-		table.insert(Lines, Line)
-		XScrollingFrameSize = math.max(XScrollingFrameSize, math.floor(#Line * 0.03))
+function CodeDisplay:UpdateSettings(Settings)
+	Settings = Settings or {}
+	if Settings.TextSize then
+		self.TextSize = Settings.TextSize
+		self.CodeLabel.TextSize = self.TextSize
+		self.CopyableCodeLabel.TextSize = self.TextSize
+		self.LineNumbers.TextSize = self.TextSize
 	end
-		
-	local NewLineCount = #Lines
-
-	while self.LineCount < NewLineCount do
-		self.LineCount = self.LineCount + 1
-		self:CreateLine(self.LineCount)
-	end
-
-	while self.LineCount > NewLineCount do
-		local LineToRemove = self.ScrollingFrame:FindFirstChild("Line" .. self.LineCount)
-		if LineToRemove then
-			LineToRemove:Destroy()
-		end
-		self.LineCount = self.LineCount - 1
+	if Settings.LineNumberWidth then
+		self.LineNumberWidth = Settings.LineNumberWidth
+		self.LineNumbers.Size = UDim2.new(0, self.LineNumberWidth, 1, 0)
+		self.CodeLabel.Size = UDim2.new(1, -(self.LineNumberWidth + 10), 1, 0)
+		self.CodeLabel.Position = UDim2.new(0, self.LineNumberWidth + 5, 0, 0)
+		self.CopyableCodeLabel.Size = UDim2.new(1, -(self.LineNumberWidth + 10), 1, 0)
+		self.CopyableCodeLabel.Position = UDim2.new(0, self.LineNumberWidth + 5, 0, 0)
 	end
 
-	for i = 1, self.LineCount do
-		local LineLabel = self.ScrollingFrame:FindFirstChild("Line" .. i)
-		if LineLabel then
-			LineLabel.Text = " " .. tostring(i)
-			local CodeLabel = LineLabel:FindFirstChild("Code")
-			if CodeLabel then
-				CodeLabel.Text = self:ProcessText(Lines[i] or "")
-			end
-			local CopyableCodeLabel = LineLabel:FindFirstChild("CopyableCode")
-			if CopyableCodeLabel then
-				CopyableCodeLabel.Text = Lines[i] or ""
-			end
-		end
+	if self.CopyableCodeLabel.Text ~= "" then
+		self:SetCode(self.CopyableCodeLabel.Text)
 	end
-	
-	YScrollingFrameSize = #Lines * 0.2
-	self.ScrollingFrame.CanvasSize = UDim2.new(XScrollingFrameSize, 0, YScrollingFrameSize, 0)
 end
 
 return CodeDisplay
