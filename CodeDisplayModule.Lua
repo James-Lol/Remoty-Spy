@@ -262,7 +262,7 @@ function CodeDisplay:SetCode(Code)
 		end
 	end
 	
-	YScrollingFrameSize = self.ScrollingFrame:FindFirstChild("UIListLayout").AbsoluteContentSize.Y * 2
+	YScrollingFrameSize = self.ScrollingFrame:FindFirstChild("UIListLayout").AbsoluteContentSize.Y
 	self.ScrollingFrame.CanvasSize = UDim2.new(XScrollingFrameSize, 0, 0, YScrollingFrameSize)
 end
 
