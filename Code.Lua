@@ -11,11 +11,11 @@ local Modules = {
 }
 
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "ScreenGui"
+ScreenGui.Name = ""
 ScreenGui.IgnoreGuiInset = true
 ScreenGui.ResetOnSpawn = false
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-ScreenGui.Parent = game:GetService("CoreGui")
+ScreenGui.Parent = game:GetService("Players").LocalPlayer.PlayerGui
 
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
@@ -322,8 +322,7 @@ local function RegisterRemote(Remote, Info)
 	end
 end
 
-local OriginalFireServer = nil
-local OriginalInvokeServer = nil
+local OriginalFireServer
 
 OriginalFireServer = hookfunction(Instance.new("RemoteEvent").FireServer, newcclosure(function(RemoteObject, ...)
 	local Args = { ... }
@@ -335,6 +334,8 @@ OriginalFireServer = hookfunction(Instance.new("RemoteEvent").FireServer, newccl
 
 	return OriginalFireServer(RemoteObject, unpack(Args))
 end))
+
+local OriginalInvokeServer
 
 OriginalInvokeServer = hookfunction(Instance.new("RemoteFunction").InvokeServer, newcclosure(function(RemoteObject, ...)
 
@@ -348,20 +349,21 @@ OriginalInvokeServer = hookfunction(Instance.new("RemoteFunction").InvokeServer,
 	return OriginalInvokeServer(RemoteObject, unpack(Args))
 end))
 
-local OriginalNamecall
-OriginalNamecall = hookmetamethod(game, "__namecall", newcclosure(function(Self, ...)
+local Namecall
+
+Namecall = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
 
 	local MethodName = getnamecallmethod()
-	local Args = { ... }
+	local Args = {...}
 	local Source = getcallingscript()
 
-	coroutine.wrap(function()
-		if MethodName == "FireServer" or MethodName == "InvokeServer" then
-			RegisterRemote(Self, {Source, Args, MethodName})
-		end
-	end)()
+	if MethodName == "FireServer" or MethodName == "InvokeServer" then
+		coroutine.wrap(function()
+			RegisterRemote(self, {Source, Args, MethodName})
+		end)()
+	end
 
-	return OriginalNamecall(Self, ...)
+	return Namecall(self, ...)
 end))
 
 CreateMainButtons()
