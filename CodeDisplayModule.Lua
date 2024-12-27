@@ -1,4 +1,5 @@
 -- Turn Text Code Into Display
+print("Updated")
 
 local CodeDisplay = {}
 CodeDisplay.__index = CodeDisplay
