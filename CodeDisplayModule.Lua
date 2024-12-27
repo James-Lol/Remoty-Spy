@@ -34,7 +34,8 @@ local BuiltInFunctions = {
 	["xpcall"] = true, ["new"] = true, ["Color3"] = true,
 	["fromRGB"] = true, ["string"] = true, ["math"] = true,
 	["Instance"] = true, ["Enum"] = true, ["Vector2"] = true,
-	["Vector3"] = true, ["UDim2"] = true, ["UDim"] = true
+	["Vector3"] = true, ["UDim2"] = true, ["UDim"] = true,
+	["game"] = true
 }
 
 local function ToInteger(Color)
@@ -172,7 +173,7 @@ end
 
 function CodeDisplay:CreateLine(Number, CodeText)
 	local LineNumber = Instance.new("TextLabel")
-	LineNumber.Size = UDim2.new(0, 30, 0.1, 0)
+	LineNumber.Size = UDim2.new(0, 35, 0.1, 0)
 	LineNumber.BackgroundTransparency = 1
 	LineNumber.TextColor3 = Color3.new(0.8, 0.8, 0.8)
 	LineNumber.TextScaled = true
