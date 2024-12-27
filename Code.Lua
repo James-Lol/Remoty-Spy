@@ -15,7 +15,7 @@ ScreenGui.Name = "ScreenGui"
 ScreenGui.IgnoreGuiInset = true
 ScreenGui.ResetOnSpawn = false
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+ScreenGui.Parent = game:GetService("CoreGui").Composer
 
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
