@@ -91,6 +91,7 @@ CodeFrame.Active = true
 CodeFrame.Parent = MainFrame
 
 local CodeDisplay = Modules.CodeDisplayModule.New(CodeFrame)
+CodeDisplay:UpdateSettings({["TextSize"] = 18})
 
 local Buttons = Instance.new("Frame")
 Buttons.Name = "Buttons"
