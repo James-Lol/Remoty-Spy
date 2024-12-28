@@ -245,7 +245,8 @@ function CodeDisplay:SetCode(Code)
 	self.LineNumbers.Text = table.concat(LineNumbersText, "\n")
 	self.CodeLabel.Text = self:ProcessText(Code)
 	self.CopyableCodeLabel.Text = Code
-
+	self.ScrollingFrame.CanvasPosition = Vector2.new(0, 0)
+	
 	self.ScrollingFrame.CanvasSize = UDim2.new(0, (self.CodeLabel.TextBounds.X + self.LineNumberWidth + 10) * 1.5, 0, self.CodeLabel.TextBounds.Y)
 end
 
