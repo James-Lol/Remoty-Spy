@@ -37,7 +37,7 @@ local BuiltInFunctions = {
 	["fromRGB"] = true, ["string"] = true, ["math"] = true,
 	["Instance"] = true, ["Enum"] = true, ["Vector2"] = true,
 	["Vector3"] = true, ["UDim2"] = true, ["UDim"] = true,
-	["game"] = true
+	["game"] = true,  ["CFrame"] = true
 }
 
 local function ToInteger(Color)
